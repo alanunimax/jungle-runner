@@ -1,0 +1,93 @@
+@startuml heranca_obstaculos
+' ==============================================================
+'  Jungle Runner - Herança dos Obstáculos
+'  UniFAJ/UniMAX - Projeto Prático Integrado (POO)
+'  Fonte: src/entidades/obstaculos.py
+'
+'  Legenda UML
+'    <|--        herança ("é um")
+'    +           público   (sem _ no nome, em Python)
+'    {abstract}  método que a subclasse É OBRIGADA a sobrescrever
+' ==============================================================
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1B2A49
+    ArrowColor #1B2A49
+    FontColor #1B2A49
+    AttributeFontColor #1B2A49
+}
+skinparam class<<base>> {
+    BackgroundColor #FFF4D6
+    BorderColor #C9A227
+}
+skinparam note {
+    BackgroundColor #FFF8DC
+    BorderColor #C9A227
+}
+
+abstract class Obstaculo <<base>> {
+    + rect : pygame.Rect
+    + perigoso : bool
+    --
+    + __init__(x, largura, altura, perigoso)
+    + atualizar() : None
+    + {abstract} desenhar(tela, camera_x) : None
+}
+
+class Tronco {
+    + __init__(x)
+    + desenhar(tela, camera_x) : None
+}
+
+class Cobra {
+    + __init__(x)
+    + desenhar(tela, camera_x) : None
+}
+
+class Fogo {
+    + contador : int
+    --
+    + __init__(x)
+    + atualizar() : None
+    + desenhar(tela, camera_x) : None
+}
+
+Obstaculo <|-- Tronco
+Obstaculo <|-- Cobra
+Obstaculo <|-- Fogo
+
+note top of Obstaculo
+  <b>Classe base (mãe)</b>
+  Define o que TODO obstáculo tem (rect, perigoso)
+  e faz (atualizar, desenhar).
+  desenhar() lança NotImplementedError:
+  cada filha é obrigada a escrever o seu.
+end note
+
+note bottom of Tronco
+  super().~__init__(x, 30, 35,
+      perigoso=False)
+  Bloqueia como parede:
+  o jogador precisa pular.
+end note
+
+note bottom of Cobra
+  super().~__init__(x, 45, 18,
+      perigoso=True)
+  Tira vida ao tocar.
+end note
+
+note bottom of Fogo
+  super().~__init__(x, 26, 40,
+      perigoso=True)
+  Único que <b>sobrescreve atualizar()</b>
+  e tem atributo próprio (contador)
+  para animar a chama.
+end note
+
+@enduml

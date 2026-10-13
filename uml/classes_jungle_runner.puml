@@ -1,0 +1,166 @@
+@startuml classes_jungle_runner
+' ==============================================================
+'  Jungle Runner (versão mínima) - Diagrama de classes completo
+'  UniFAJ/UniMAX - Projeto Prático Integrado (POO)
+'
+'  Legenda UML
+'    <|--   herança      ("é um")       Tronco É UM Obstaculo
+'    *--    composição   ("tem um")     o Jogo cria e é dono do objeto
+'    ..>    dependência  ("usa")        chama funções de outro módulo
+'    +  público    -  privado (em Python: nome começando com _)
+'
+'  Os quadros <<módulo>> NÃO são classes: são arquivos .py que
+'  só têm funções. Aparecem aqui para mostrar quem o Jogo usa.
+' ==============================================================
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1B2A49
+    ArrowColor #1B2A49
+    FontColor #1B2A49
+}
+skinparam class<<base>> {
+    BackgroundColor #FFF4D6
+    BorderColor #C9A227
+}
+skinparam class<<módulo>> {
+    BackgroundColor #EEF1F5
+    BorderColor #8A94A6
+    FontColor #4A5568
+}
+skinparam package {
+    BackgroundColor #FBFAF6
+    BorderColor #C9A227
+    FontColor #1B2A49
+}
+skinparam note {
+    BackgroundColor #FFF8DC
+    BorderColor #C9A227
+}
+
+hide <<módulo>> circle
+hide <<módulo>> fields
+
+package "src" {
+
+    class Jogo {
+        + tela : pygame.Surface
+        + relogio : pygame.time.Clock
+        + jogador : Jogador
+        + ponte : Ponte
+        + obstaculos : list[Obstaculo]
+        + vidas : int
+        + checkpoint_x : int
+        + camera_x : int
+        --
+        + __init__()
+        + executar() : None
+        - _processar_eventos() : bool
+        - _atualizar() : None
+        - _checar_colisoes() : None
+        - _perder_vida(empurrar = False) : None
+        - _reiniciar() : None
+        - _desenhar() : None
+    }
+
+    package "entidades" {
+
+        class Jogador {
+            + rect : pygame.Rect
+            + velocidade_y : float
+            + no_chao : bool
+            --
+            + __init__(x, y)
+            + pular() : None
+            + mover(dx) : None
+            + atualizar(chao_y) : bool
+            + desenhar(tela, camera_x) : None
+        }
+
+        class "ponte.py (funções)" as mod_ponte <<módulo>> {
+            + desenhar_lago(tela, camera_x, inicio, fim)
+            + chao_em(x, ponte) : int | None
+        }
+
+        class Ponte {
+            + tabuas : list[tuple[int, int]]
+            --
+            + __init__(inicio, fim, largura_tabua = 50, largura_vao = 50)
+            + esta_sobre_tabua(x) : bool
+            + desenhar(tela, camera_x) : None
+        }
+
+        abstract class Obstaculo <<base>> {
+            + rect : pygame.Rect
+            + perigoso : bool
+            --
+            + __init__(x, largura, altura, perigoso)
+            + atualizar() : None
+            + {abstract} desenhar(tela, camera_x) : None
+        }
+
+        class Tronco {
+            + __init__(x)
+            + desenhar(tela, camera_x) : None
+        }
+
+        class Cobra {
+            + __init__(x)
+            + desenhar(tela, camera_x) : None
+        }
+
+        class Fogo {
+            + contador : int
+            --
+            + __init__(x)
+            + atualizar() : None
+            + desenhar(tela, camera_x) : None
+        }
+    }
+
+    class "mundo/cenario.py" as mod_cenario <<módulo>> {
+        + desenhar_fundo(tela, camera_x) : str
+        + obter_cores_bioma(x) : tuple
+    }
+
+    class "ui/hud.py" as mod_hud <<módulo>> {
+        + desenhar_hud(tela, vidas, tipo_bioma)
+    }
+
+    class "audio.py" as mod_audio <<módulo>> {
+        + iniciar()
+        + tocar_pulo()
+    }
+}
+
+' ---------- HERANÇA ----------
+Obstaculo <|-- Tronco
+Obstaculo <|-- Cobra
+Obstaculo <|-- Fogo
+
+' ---------- COMPOSIÇÃO (o Jogo cria e é dono) ----------
+Jogo *-- "1" Jogador
+Jogo *-- "1" Ponte
+Jogo *-- "9" Obstaculo : obstaculos
+
+' ---------- DEPENDÊNCIA (o Jogo usa funções de módulos) ----------
+Jogo ..> mod_ponte : usa
+Jogo ..> mod_cenario : usa
+Jogo ..> mod_hud : usa
+Jogo ..> mod_audio : usa
+mod_ponte ..> Ponte : consulta tábuas
+
+note left of Obstaculo
+  <b>Polimorfismo:</b> o Jogo guarda Tronco, Cobra e Fogo
+  na MESMA lista (list[Obstaculo]) e chama
+  obs.atualizar() / obs.desenhar() sem perguntar
+  o tipo. Cada filha responde do seu jeito.
+end note
+
+@enduml

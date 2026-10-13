@@ -1,4 +1,4 @@
-@startuml
+@startuml obstaculos
 class Obstaculo 
 class Tronco 
 Obstaculo <|-- Tronco 
